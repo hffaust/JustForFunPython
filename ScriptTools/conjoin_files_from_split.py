@@ -19,7 +19,7 @@ def album_song_printer(viable_path):
 	# removes all blanks, aka entries made before the walk descends into an album
 	copy_dict = proper_place_dirs.copy()
 	for k in copy_dict.keys():
-		if(copy_dict.get(k) == []):
+		if(copy_dict.get(k) == [] or copy_dict.get(k) == ['.DS_Store']):
 			del proper_place_dirs[k]
 
 	artist_album_to_songs_dict = {}
@@ -49,35 +49,57 @@ def album_song_printer(viable_path):
 
 def compare(good_dir, bad_dir):
 	file_rearrange = {}
+	file_move_dict = {}
 	for key in bad_dir.keys():
 		if(good_dir.get(key) != None):
 			files_to_move, move_from_path = bad_dir.get(key)
 			files_to_stay, move_to_path = good_dir.get(key)
-			print(key, good_dir.get(key))
-			print(key, bad_dir.get(key))
-			print("\n")
+			# print(key, good_dir.get(key))		# test print
+			# print(key, bad_dir.get(key))		# test print
+			# print("\n")						# test print for spacing
 			for item in bad_dir.get(key):
 				if(item in good_dir.get(key)):
 					print("HOLY FUCK WE HAVE A MATCH\n" + str(item) + " appears in both directories and should be resolved manually!\n")
 					sys.exit(1)
 					# this would show duplicate files
 			file_rearrange[str(move_from_path)] = (files_to_move, move_to_path)
-	return(file_rearrange)
+		elif(good_dir.get(key) == None and bad_dir.get(key) != None):
+			files_to_move, move_from_path = bad_dir.get(key)
+			fix_move_path = move_from_path.replace('iTunes', 'Music')
+
+			# print(fix_move_path)		# test print
+			# print(files_to_move)		# test print
+			file_move_dict[str(move_from_path)] = (files_to_move, fix_move_path)
+	
+	# print(file_rearrange)		# test print
+	print(file_move_dict)		# test print
+	return(file_rearrange, file_move_dict)
 
 
-def move_files_bitch(file_rearrange):
+def rearrange_files_bitch(file_rearrange):
 	counter = 0 
 	for move_from_path in file_rearrange:
-		# if(counter == 2):
-		# 	sys.exit(0)
 		files_to_move, move_to_path = file_rearrange.get(move_from_path)
 		for file_name in files_to_move:
 			complete_path = str(move_from_path)+"/"+str(file_name)
 			print(complete_path)
 			destination = shutil.move(str(complete_path), str(move_to_path)) 
-		counter += 1
-	print(str(counter) + " files moved BITCH!")
+			input("About to delete path... press any key to continue or ctrl+c to exit")
+			shutil.rmtree(str(move_from_path))		# removes the directory files were moved from after they are moved
 
+		counter += 1
+	print(str(counter) + " files rearranged BITCH!")
+
+
+def move_files_bitch(file_move_dict):
+	counter = 0
+	for move_from_path in file_move_dict:
+		files_to_move, fix_move_path = file_move_dict.get(move_from_path)
+		print(move_from_path)
+		print(fix_move_path)
+		destination = shutil.move(str(move_from_path), str(fix_move_path))
+		counter += 1 
+	print(str(counter) + " files moved BITCH!")
 
 def main(argv):
 	if(len(sys.argv) < 3):
@@ -95,11 +117,12 @@ def main(argv):
 	print("\n\n\n")
 	# print(bad_dir)    # test print
 
-	file_rearrange = compare(good_dir, bad_dir)
+	file_rearrange, file_move_dict = compare(good_dir, bad_dir)
 	print("\n\n\n")
 	print(file_rearrange)
-	move_files_bitch(file_rearrange)
-	# print(dir(os.path))
+	# rearrange_files_bitch(file_rearrange)
+	move_files_bitch(file_move_dict)
+	
 	# os.path.realpath will resolve symlinks AND return an absolute path from a relative path
 	# print(os.path.realpath('.'))
 
