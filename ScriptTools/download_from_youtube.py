@@ -21,6 +21,8 @@ def read_video_list(filename, delimiter):
     print(content)
     if(delimiter != None):
         content = content.split(delimiter)
+    else:
+        content = content.split()
     print(content)
     f.close()
     return content
