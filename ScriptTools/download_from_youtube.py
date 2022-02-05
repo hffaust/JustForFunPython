@@ -1,6 +1,19 @@
 import sys
 import click
 from pytube import YouTube
+from pathlib import Path
+'''
+RESOURCES:
+    1. https://github.com/pytube/pytube
+        - Original pytube repo.
+    2. https://pytube.io/en/latest/
+        - Pytube documentation website.
+    3. https://stackoverflow.com/questions/70060263/pytube-attributeerror-nonetype-object-has-no-attribute-span
+        - Stackoverflow post describing the exact error I was experiencing.
+    4. https://github.com/baxterisme/pytube
+        - Fork needed to make program work. Has needed regex fix in pytube/parser.py (on line 152 in v11.0.1).
+'''
+
 
 def read_video_list(filename, delimiter):
     f = open(filename,'r')
@@ -12,7 +25,7 @@ def read_video_list(filename, delimiter):
     f.close()
     return content
 
-def download_from_youtube(urls, audio_only=False, save_captions=False, interactive_mode=False):
+def download_from_youtube(urls, save_path, audio_only=False, save_captions=False, interactive_mode=False):
     def interactively_select_itag(stream_options):
         for option in stream_options:
             print(option)
@@ -28,7 +41,7 @@ def download_from_youtube(urls, audio_only=False, save_captions=False, interacti
         else:
             # No exception when selecting itag
             try:
-                stream.download()
+                stream.download(output_path=save_path)
             except Exception as e:
                 print(f"Error when trying to download the following: {yt.title}")
                 print(e)
@@ -76,7 +89,15 @@ def download_from_youtube(urls, audio_only=False, save_captions=False, interacti
 @click.option('--audio-only', 'audio_only', is_flag=True, default=False)
 @click.option('--save-captions', 'save_captions', is_flag=True, default=False)
 @click.option('--interactive', 'interactive_mode', is_flag=True, default=False)
-def main(video_list_filename,list_delimiter,url,audio_only,save_captions,interactive_mode):
+@click.option('--save-path', 'save_path', type=str, default=(Path.home()/"Downloads"), required=False)
+def main(
+        video_list_filename,
+        list_delimiter,url,
+        audio_only,
+        save_captions,
+        interactive_mode,
+        save_path
+        ):
     urls = []
     if(video_list_filename != None):
         urls.extend( read_video_list(video_list_filename, list_delimiter) )
@@ -84,7 +105,7 @@ def main(video_list_filename,list_delimiter,url,audio_only,save_captions,interac
         print(url)
         urls.append(url)
     print(urls)
-    download_from_youtube(urls, audio_only=audio_only, save_captions=save_captions, interactive_mode=interactive_mode)
+    download_from_youtube(urls, save_path, audio_only=audio_only, save_captions=save_captions, interactive_mode=interactive_mode)
     print("ALL DONE")
     return 0
 
