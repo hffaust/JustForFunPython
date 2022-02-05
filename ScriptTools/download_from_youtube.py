@@ -1,7 +1,9 @@
 import sys
 import click
 from pytube import YouTube
+from pytube.cli import on_progress
 from pathlib import Path
+
 '''
 RESOURCES:
     1. https://github.com/pytube/pytube
@@ -56,8 +58,8 @@ def download_from_youtube(urls, save_path, audio_only=False, save_captions=False
         caption_file.close()
 
     for url in urls:
-        yt = YouTube(url)
-        print(yt)    
+        yt = YouTube(url, on_progress_callback=on_progress)
+        print("\n",yt.title)    
         if(audio_only):
             audio_stream_options = yt.streams.filter(only_audio=True)
             if(interactive_mode):
